@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - WebbyTouch Infotech{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Welcome Section -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center space-x-4">
+            <div class="bg-indigo-100 rounded-full p-3">
+                <i class="fas fa-user text-2xl text-indigo-600"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Welcome, {{ session['user']['name'] }}!</h2>
+                <p class="text-gray-600">Manage your appointments and view upcoming events</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="{{ url_for('appointments.book_appointment') }}" 
+           class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center space-x-4">
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-calendar-plus text-xl text-green-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Book Appointment</h3>
+                    <p class="text-gray-600">Schedule a new call or meeting</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('events.list_events') }}"
+           class="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center space-x-4">
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-calendar-week text-xl text-purple-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">View Events</h3>
+                    <p class="text-gray-600">Check upcoming company events</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Upcoming Appointments</h3>
+            <a href="{{ url_for('appointments.list_appointments') }}" 
+               class="text-sm text-indigo-600 hover:text-indigo-500">
+                View all <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+
+        {% if appointments %}
+        <div class="space-y-4">
+            {% for appointment in appointments %}
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="{% if appointment.meeting_type == 'online' %}bg-blue-100{% else %}bg-yellow-100{% endif %} rounded-full p-2">
+                            <i class="{% if appointment.meeting_type == 'online' %}fas fa-video{% else %}fas fa-building{% endif %} text-{% if appointment.meeting_type == 'online' %}blue{% else %}yellow{% endif %}-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">
+                                {{ appointment.date }} at {{ appointment.time }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                {{ appointment.call_type|title }} Call - {{ appointment.meeting_type|title }}
+                            </p>
+                        </div>
+                    </div>
+                    {% if appointment.meeting_type == 'online' and appointment.meeting_link %}
+                    <a href="{{ appointment.meeting_link }}" target="_blank"
+                       class="text-indigo-600 hover:text-indigo-500">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% if appointment.notes %}
+                <p class="mt-2 text-sm text-gray-600">
+                    <i class="fas fa-sticky-note text-gray-400 mr-1"></i>
+                    {{ appointment.notes }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="bg-gray-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-calendar text-gray-400"></i>
+            </div>
+            <p class="text-gray-600">No upcoming appointments</p>
+            <a href="{{ url_for('appointments.book_appointment') }}" 
+               class="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500">
+                Book your first appointment <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- User Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Appointments</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ appointments|length }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-calendar-check text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Online Meetings</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {{ appointments|selectattr('meeting_type', 'equalto', 'online')|list|length }}
+                    </p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-video text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Overseas Calls</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {{ appointments|selectattr('call_type', 'equalto', 'overseas')|list|length }}
+                    </p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-globe text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
